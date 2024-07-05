@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jeff's Tab Saver</title>
+
+  <style>
+    body {
+      width: 330px;
+      padding: 10px;
+    }
+
+    .button {
+      width: 160px;
+      padding: 5px 10px;
+      background-color: #3377ff; /* Blue */
+      border: none;
+      border-radius: 4px;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 12px;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+
+
+    .btn {
+      width: 140px;
+      padding: 5px 10px;
+      background-color: #3377ff; /* Blue */
+      border: none;
+      border-radius: 4px;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 12px;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+
+    #status {
+      margin-top: 10px;
+    }
+
+    .window {
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 10px;
+    }
+    .window h2 {
+      margin-top: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .window ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    .window ul li {
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .group {
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 5px;
+      background-color: #f9f9f9;
+    }
+    .deleteBtn {
+      background-color: #cc3300; /* Red */
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 5px;
+      font-size: 10px;
+    }
+    .openBtn {
+      background-color: #3377ff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 5px;
+      margin-left: 10px;
+      font-size: 10px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+.action_btn {
+width: 320px;
+margin: 0 auto;
+display: inline;}
+.button-container {
+  display: flex;
+}
+
+
+  </style>
+
+
+</head>
+<body>
+  <h1>Tab Saver</h1>
+
+<div class="button-container">
+  <button id="saveTabs" class="button">Save Tabs</button>
+</div>
+
+<div class="button-container">
+  <button id="openTabs" class="button">Open All Tabs</button>
+  <button id="deleteAllTabs" class="button">Delete All Tabs</button>
+</div>
+
+<div class="button-container">
+  <button id="exportTabs" class="button">Export All Tabs</button> <!-- Export button -->
+  <input id="importFile" type="file" accept=".json"/>  
+  <label for="importFile" class="btn">Import File</label>
+</div>
+
+  <!-- <input type="file" id="importFile" accept=".json"> 
+  <!-- <button id="importTabs">Import Tabs</button> <!-- New button for importing tabs -->
+
+  <div id="status"></div>
+  <div id="windowsList"></div>
+  <script src="popup.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Jeff's Tab Saver",
+  "version": "1.0",
+  "description": "Saves all open tabs for all open windows",
+  "permissions": [
+    "tabs",
+    "tabGroups",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
