@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('openTabs').addEventListener('click', openAllTabs);
   document.getElementById('deleteAllTabs').addEventListener('click', deleteAllTabs);
   document.getElementById('exportTabs').addEventListener('click', exportTabs); // Event listener for export button
-  document.getElementById('importFile').addEventListener('change', importTabs); // Event listener for import file input change
+  // document.getElementById('importTabs').addEventListener('click', importTabs); // Event listener for import button
   loadTabs();
 });
 
@@ -69,8 +69,8 @@ function loadTabs() {
             groupDiv.appendChild(groupTitle);
 
             var groupTabsList = document.createElement('ul');
-            group.tabs.forEach(function(tab) {
-              var li = createTabListItem(tab);
+            group.tabs.forEach(function(tab, index) {
+              var li = createTabListItem(tab, window.windowId, groupId, index);
               groupTabsList.appendChild(li);
             });
 
@@ -85,7 +85,7 @@ function loadTabs() {
   });
 }
 
-function createTabListItem(tab) {
+function createTabListItem(tab, windowId, groupId, tabIndex) {
   var li = document.createElement('li');
   var a = document.createElement('a');
   a.href = tab.url;
@@ -97,7 +97,11 @@ function createTabListItem(tab) {
   deleteBtn.textContent = 'Delete';
   deleteBtn.className = 'deleteBtn';
   deleteBtn.addEventListener('click', function() {
-    deleteTab(tab.url);
+    if (groupId !== undefined && tabIndex !== undefined) {
+      deleteGroupTab(windowId, groupId, tabIndex);
+    } else {
+      deleteTab(tab.url);
+    }
   });
   li.appendChild(deleteBtn);
 
@@ -117,26 +121,28 @@ function deleteTab(tabUrl) {
           chrome.storage.local.set({ savedTabs: result.savedTabs }, function() {
             loadTabs(); // Reload tabs after deleting
           });
-        } else {
-          // Check in groups if tab is not found in regular tabs
-          for (var groupId in window.groups) {
-            if (window.groups.hasOwnProperty(groupId)) {
-              var group = window.groups[groupId];
-              var groupTabIndex = group.tabs.findIndex(tab => tab.url === tabUrl);
-              if (groupTabIndex !== -1) {
-                group.tabs.splice(groupTabIndex, 1);
-                if (group.tabs.length === 0) {
-                  delete result.savedTabs[windowIndex].groups[groupId];
-                }
-                chrome.storage.local.set({ savedTabs: result.savedTabs }, function() {
-                  loadTabs(); // Reload tabs after deleting
-                });
-                return;
-              }
-            }
-          }
         }
       });
+    }
+  });
+}
+
+function deleteGroupTab(windowId, groupId, tabIndex) {
+  chrome.storage.local.get(['savedTabs'], function(result) {
+    if (result.savedTabs) {
+      var windowIndex = result.savedTabs.findIndex(window => window.windowId === windowId);
+      if (windowIndex !== -1) {
+        var group = result.savedTabs[windowIndex].groups[groupId];
+        if (group) {
+          group.tabs.splice(tabIndex, 1);
+          if (group.tabs.length === 0) {
+            delete result.savedTabs[windowIndex].groups[groupId];
+          }
+          chrome.storage.local.set({ savedTabs: result.savedTabs }, function() {
+            loadTabs(); // Reload tabs after deleting
+          });
+        }
+      }
     }
   });
 }
@@ -158,31 +164,102 @@ function deleteWindow(windowId) {
 function openWindow(windowId) {
   chrome.storage.local.get(['savedTabs'], function(result) {
     if (result.savedTabs) {
-      var window = result.savedTabs.find(window => window.windowId === windowId);
-      if (window) {
-        var allTabs = [];
+      var windowInfo = result.savedTabs.find(window => window.windowId === windowId);
+      if (windowInfo) {
+        var tabsToCreate = [];
 
-        // Collect all tabs from the window
-        if (window.tabs && window.tabs.length > 0) {
-          allTabs = allTabs.concat(window.tabs);
-        }
+        // Collect all tab URLs from both tabs and groups
+        windowInfo.tabs.forEach(tab => {
+          tabsToCreate.push({ url: tab.url, groupId: null });
+        });
 
-        // Collect all tabs from each group
-        for (var groupId in window.groups) {
-          if (window.groups.hasOwnProperty(groupId)) {
-            var group = window.groups[groupId];
-            if (group.tabs && group.tabs.length > 0) {
-              allTabs = allTabs.concat(group.tabs);
-            }
+        for (var groupId in windowInfo.groups) {
+          if (windowInfo.groups.hasOwnProperty(groupId)) {
+            var group = windowInfo.groups[groupId];
+            group.tabs.forEach(tab => {
+              tabsToCreate.push({ url: tab.url, groupId: parseInt(groupId) });
+            });
           }
         }
 
-        // Extract URLs from allTabs array
-        var urls = allTabs.map(tab => tab.url);
+        // Open a new Chrome window with the first tab to get the new window ID
+        if (tabsToCreate.length > 0) {
+          chrome.windows.create({ url: tabsToCreate[0].url }, function(newWindow) {
+            if (chrome.runtime.lastError) {
+              console.error("Error creating window:", chrome.runtime.lastError.message);
+              return;
+            }
 
-        // Open a new Chrome window with all tabs and tab groups
-        if (urls.length > 0) {
-          chrome.windows.create({ url: urls });
+            var newWindowId = newWindow.id;
+            var createdTabIds = [];
+            var tabCreationPromises = [];
+
+            // Create remaining tabs in the new window
+            for (var i = 1; i < tabsToCreate.length; i++) {
+              var tabToCreate = tabsToCreate[i];
+              tabCreationPromises.push(
+                new Promise((resolve, reject) => {
+                  chrome.tabs.create({ windowId: newWindowId, url: tabToCreate.url, active: false }, function(newTab) {
+                    if (chrome.runtime.lastError) {
+                      reject(chrome.runtime.lastError.message);
+                    } else {
+                      createdTabIds.push({ tabId: newTab.id, groupId: tabToCreate.groupId });
+                      resolve();
+                    }
+                  });
+                })
+              );
+            }
+
+            Promise.all(tabCreationPromises)
+              .then(() => {
+                var tabsByGroup = {};
+
+                // Collect tab IDs by groupId
+                createdTabIds.forEach(createdTab => {
+                  var groupId = createdTab.groupId;
+                  if (groupId !== null) {
+                    if (!tabsByGroup[groupId]) {
+                      tabsByGroup[groupId] = [];
+                    }
+                    tabsByGroup[groupId].push(createdTab.tabId);
+                  }
+                });
+
+                // Group tabs as needed
+                var groupPromises = [];
+                for (var groupId in tabsByGroup) {
+                  if (tabsByGroup.hasOwnProperty(groupId)) {
+                    var groupTabIds = tabsByGroup[groupId];
+
+                    if (groupTabIds.length > 0) {
+                      groupPromises.push(
+                        new Promise((resolve, reject) => {
+                          chrome.tabs.group({ tabIds: groupTabIds, createProperties: { windowId: newWindowId } }, function(newGroupId) {
+                            if (chrome.runtime.lastError) {
+                              reject(chrome.runtime.lastError.message);
+                            } else {
+                              var group = windowInfo.groups[groupId];
+                              chrome.tabGroups.update(newGroupId, { title: group.title, color: group.color }, function() {
+                                resolve();
+                              });
+                            }
+                          });
+                        })
+                      );
+                    }
+                  }
+                }
+
+                return Promise.all(groupPromises);
+              })
+              .then(() => {
+                console.log("Tabs and groups opened successfully");
+              })
+              .catch(error => {
+                console.error("Error opening tabs and groups:", error);
+              });
+          });
         }
       }
     }
@@ -193,29 +270,7 @@ function openAllTabs() {
   chrome.storage.local.get(['savedTabs'], function(result) {
     if (result.savedTabs) {
       result.savedTabs.forEach(function(window) {
-        var allTabs = [];
-
-        // Collect all tabs from the window and its groups
-        if (window.tabs && window.tabs.length > 0) {
-          allTabs = allTabs.concat(window.tabs);
-        }
-
-        for (var groupId in window.groups) {
-          if (window.groups.hasOwnProperty(groupId)) {
-            var group = window.groups[groupId];
-            if (group.tabs && group.tabs.length > 0) {
-              allTabs = allTabs.concat(group.tabs);
-            }
-          }
-        }
-
-        // Extract URLs from allTabs array
-        var urls = allTabs.map(tab => tab.url);
-
-        // Open a new Chrome window with all tabs for this window ID
-        if (urls.length > 0) {
-          chrome.windows.create({ url: urls });
-        }
+        openWindow(window.windowId);
       });
     }
   });
@@ -224,55 +279,43 @@ function openAllTabs() {
 function deleteAllTabs() {
   chrome.storage.local.remove('savedTabs', function() {
     loadTabs(); // Reload tabs after deleting all
-    document.getElementById('status').textContent = "All saved tabs deleted!";
   });
 }
 
 function exportTabs() {
   chrome.storage.local.get(['savedTabs'], function(result) {
     if (result.savedTabs) {
-      var data = JSON.stringify(result.savedTabs, null, 2);
-      var blob = new Blob([data], { type: 'text/plain' });
-      var url = URL.createObjectURL(blob);
-
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'saved_tabs.json';
-      a.textContent = 'Download saved tabs';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-
-      a.click();
-
-      setTimeout(function() {
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      }, 0);
+      var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(result.savedTabs));
+      var downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", "saved_tabs.json");
+      document.body.appendChild(downloadAnchorNode); // Required for Firefox
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
     }
   });
 }
 
-function importTabs() {
-  var fileInput = document.getElementById('importFile');
-  var file = fileInput.files[0];
-  var reader = new FileReader();
-  
-  reader.onload = function(event) {
-    try {
-      var importedTabs = JSON.parse(event.target.result);
-      chrome.storage.local.set({ savedTabs: importedTabs }, function() {
-        loadTabs(); // Reload tabs after importing
-        document.getElementById('status').textContent = "Tabs imported successfully!";
-      });
-    } catch (error) {
-      console.error("Error importing tabs:", error);
-      document.getElementById('status').textContent = "Error importing tabs: " + error.message;
-    }
-  };
+// function importTabs() {
+//   var fileInput = document.createElement('input');
+//   fileInput.type = 'file';
+//   fileInput.accept = '.json';
 
-  if (file) {
-    reader.readAsText(file);
-  } else {
-    document.getElementById('status').textContent = "No file selected!";
-  }
-}
+//   fileInput.onchange = function(event) {
+//     var file = event.target.files[0];
+//     var reader = new FileReader();
+//     reader.onload = function(e) {
+//       try {
+//         var importedTabs = JSON.parse(e.target.result);
+//         chrome.storage.local.set({ savedTabs: importedTabs }, function() {
+//           loadTabs(); // Reload tabs after importing
+//         });
+//       } catch (error) {
+//         console.error('Error importing tabs:', error);
+//       }
+//     };
+//     reader.readAsText(file);
+//   };
+
+//   fileInput.click();
+// }
