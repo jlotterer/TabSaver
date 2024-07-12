@@ -296,26 +296,51 @@ function exportTabs() {
   });
 }
 
-// function importTabs() {
-//   var fileInput = document.createElement('input');
-//   fileInput.type = 'file';
-//   fileInput.accept = '.json';
+function importTabs() {
+  var fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.json';
 
-//   fileInput.onchange = function(event) {
-//     var file = event.target.files[0];
-//     var reader = new FileReader();
-//     reader.onload = function(e) {
-//       try {
-//         var importedTabs = JSON.parse(e.target.result);
-//         chrome.storage.local.set({ savedTabs: importedTabs }, function() {
-//           loadTabs(); // Reload tabs after importing
-//         });
-//       } catch (error) {
-//         console.error('Error importing tabs:', error);
-//       }
-//     };
-//     reader.readAsText(file);
+  fileInput.onchange = function(event) {
+    var file = event.target.files[0];
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var importedTabs = JSON.parse(e.target.result);
+        chrome.storage.local.set({ savedTabs: importedTabs }, function() {
+          loadTabs(); // Reload tabs after importing
+        });
+      } catch (error) {
+        console.error('Error importing tabs:', error);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  fileInput.click();
+}
+
+// function importTabs() {
+//   var fileInput = document.getElementById('importTabs');
+//   var file = fileInput.files[0];
+//   var reader = new FileReader();
+
+//   reader.onload = function(event) {
+//     try {
+//       var importedTabs = JSON.parse(event.target.result);
+//       chrome.storage.local.set({ savedTabs: importedTabs }, function() {
+//         loadTabs(); // Reload tabs after importing
+//         document.getElementById('status').textContent = "Tabs imported successfully!";
+//       });
+//     } catch (error) {
+//       console.error("Error importing tabs:", error);
+//       document.getElementById('status').textContent = "Error importing tabs: " + error.message;
+//     }
 //   };
 
-//   fileInput.click();
+//   if (file) {
+//     reader.readAsText(file);
+//   } else {
+//     document.getElementById('status').textContent = "No file selected!";
+//   }
 // }
