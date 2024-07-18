@@ -228,6 +228,30 @@ function deleteAllTabs() {
   });
 }
 
+// function exportTabs() {
+//   chrome.storage.local.get(['savedTabs'], function(result) {
+//     if (result.savedTabs) {
+//       var data = JSON.stringify(result.savedTabs, null, 2);
+//       var blob = new Blob([data], { type: 'text/plain' });
+//       var url = URL.createObjectURL(blob);
+
+//       var a = document.createElement('a');
+//       a.href = url;
+//       a.download = 'saved_tabs.json';
+//       a.textContent = 'Download saved tabs';
+//       a.style.display = 'none';
+//       document.body.appendChild(a);
+
+//       a.click();
+
+//       setTimeout(function() {
+//         document.body.removeChild(a);
+//         window.URL.revokeObjectURL(url);
+//       }, 0);
+//     }
+//   });
+// }
+
 function exportTabs() {
   chrome.storage.local.get(['savedTabs'], function(result) {
     if (result.savedTabs) {
@@ -237,7 +261,18 @@ function exportTabs() {
 
       var a = document.createElement('a');
       a.href = url;
-      a.download = 'saved_tabs.json';
+
+      // Get the current date and time in YYYY-MM-DD_HH-mm format
+      var now = new Date();
+      var year = now.getFullYear();
+      var month = String(now.getMonth() + 1).padStart(2, '0');
+      var day = String(now.getDate()).padStart(2, '0');
+      var hours = String(now.getHours()).padStart(2, '0');
+      var minutes = String(now.getMinutes()).padStart(2, '0');
+      var formattedDate = `${year}-${month}-${day}_${hours}-${minutes}`;
+
+      // Set the filename
+      a.download = `TabSaver_${formattedDate}.json`;
       a.textContent = 'Download saved tabs';
       a.style.display = 'none';
       document.body.appendChild(a);
@@ -251,6 +286,7 @@ function exportTabs() {
     }
   });
 }
+
 
 function importTabs(event) {
   var fileInput = event.target;
