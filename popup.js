@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('deleteAllTabs').addEventListener('click', deleteAllTabs);
   document.getElementById('exportTabs').addEventListener('click', exportTabs); // Event listener for export button
   document.getElementById('importTabs').addEventListener('change', importTabs); // Event listener for import file input change
+  document.getElementById('reloadTabsInActiveWindow').addEventListener('click', reloadTabsInActiveWindow); // Event listener for reload tabs in active window
+  document.getElementById('reloadAllTabs').addEventListener('click', reloadAllTabs); // Event listener for reload all tabs
   loadTabs();
 });
 
@@ -227,6 +229,29 @@ function deleteAllTabs() {
     document.getElementById('status').textContent = "All saved tabs deleted!";
   });
 }
+
+
+
+function reloadAllTabs() {
+  chrome.windows.getAll({ populate: true }, (windows) => {
+    windows.forEach((window) => {
+      window.tabs.forEach((tab) => {
+        chrome.tabs.reload(tab.id);
+      });
+    });
+  });
+}
+
+function reloadTabsInActiveWindow() {
+  chrome.windows.getCurrent({}, (currentWindow) => {
+    chrome.tabs.query({ windowId: currentWindow.id }, (tabs) => {
+      tabs.forEach((tab) => {
+        chrome.tabs.reload(tab.id);
+      });
+    });
+  });
+}
+
 
 // function exportTabs() {
 //   chrome.storage.local.get(['savedTabs'], function(result) {
