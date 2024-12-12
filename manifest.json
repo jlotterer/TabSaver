@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Jeff's Tab Saver",
+  "name": "Tab Manager",
   "version": "1.0",
-  "description": "Saves all open tabs for all open windows",
+  "description": "Saves all open tabs for all open windows, and does some other stuff too",
   "permissions": [
     "tabs",
     "tabGroups",
