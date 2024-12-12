@@ -3,12 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jeff's Tab Saver</title>
+  <title>Jeff's Tab Manager</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
 
   <style>
     body {
       width: 330px;
       padding: 10px;
+      font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
+      font-size: 80%;
     }
 
     .button {
@@ -21,7 +27,7 @@
       text-align: center;
       text-decoration: none;
       display: inline-block;
-      font-size: 12px;
+      font-size: 11px;
       margin: 4px 2px;
       cursor: pointer;
     }
@@ -37,7 +43,7 @@
       text-align: center;
       text-decoration: none;
       display: inline-block;
-      font-size: 12px;
+      font-size: 11px;
       margin: 4px 2px;
       cursor: pointer;
     }
@@ -51,6 +57,7 @@
       border: 1px solid #ddd;
       border-radius: 5px;
       padding: 10px;
+      font-size: 11px;
     }
     .window h2 {
       margin-top: 0;
@@ -114,7 +121,7 @@
 
 </head>
 <body>
-  <h1>Tab Saver</h1>
+  <h3>Tab Manager</h3>
 
 <div class="button-container">
   <button id="saveTabs" class="button">Save Tabs</button>
@@ -129,6 +136,11 @@
   <button id="exportTabs" class="button">Export All Tabs</button> <!-- Export button -->
   <input id="importTabs" type="file" accept=".json"/>  
   <label for="importTabs" class="btn">Import Tabs</label>
+</div>
+
+<div class="button-container">
+  <button id="reloadTabsInActiveWindow" class="button">Reload Active Window</button>
+  <button id="reloadAllTabs" class="button">Reload All Windows</button>
 </div>
 
   <!-- <input type="file" id="importTabs" accept=".json"> 
