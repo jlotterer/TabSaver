@@ -596,21 +596,29 @@ function openWindow(windowId) {
       if (windowInfo) {
         var tabsToCreate = [];
 
-        // Collect all tab URLs from both tabs and groups
+        // Collect all tab URLs and maintain their original group information
         windowInfo.tabs.forEach(tab => {
-          tabsToCreate.push({ url: tab.url, groupId: null });
+          tabsToCreate.push({ 
+            url: tab.url, 
+            groupId: null,
+            originalGroupTitle: null,
+            originalGroupColor: null
+          });
         });
 
-        for (var groupId in windowInfo.groups) {
-          if (windowInfo.groups.hasOwnProperty(groupId)) {
-            var group = windowInfo.groups[groupId];
-            group.tabs.forEach(tab => {
-              tabsToCreate.push({ url: tab.url, groupId: parseInt(groupId) });
+        // Add group information for grouped tabs
+        Object.entries(windowInfo.groups).forEach(([groupId, group]) => {
+          group.tabs.forEach(tab => {
+            tabsToCreate.push({ 
+              url: tab.url, 
+              groupId: groupId,
+              originalGroupTitle: group.title,
+              originalGroupColor: group.color
             });
-          }
-        }
+          });
+        });
 
-        // Open a new Chrome window with the first tab to get the new window ID
+        // Open new window with first tab
         if (tabsToCreate.length > 0) {
           chrome.windows.create({ url: tabsToCreate[0].url }, function(newWindow) {
             if (chrome.runtime.lastError) {
@@ -618,21 +626,29 @@ function openWindow(windowId) {
               return;
             }
 
-            var newWindowId = newWindow.id;
-            var createdTabIds = [];
-            var tabCreationPromises = [];
+            const newWindowId = newWindow.id;
+            const tabCreationPromises = [];
+            const groupMapping = new Map(); // Map to track new group IDs
 
-            // Create remaining tabs in the new window
-            for (var i = 1; i < tabsToCreate.length; i++) {
-              var tabToCreate = tabsToCreate[i];
+            // Create remaining tabs
+            for (let i = 1; i < tabsToCreate.length; i++) {
+              const tabToCreate = tabsToCreate[i];
               tabCreationPromises.push(
                 new Promise((resolve, reject) => {
-                  chrome.tabs.create({ windowId: newWindowId, url: tabToCreate.url, active: false }, function(newTab) {
+                  chrome.tabs.create({ 
+                    windowId: newWindowId, 
+                    url: tabToCreate.url, 
+                    active: false 
+                  }, function(newTab) {
                     if (chrome.runtime.lastError) {
                       reject(chrome.runtime.lastError.message);
                     } else {
-                      createdTabIds.push({ tabId: newTab.id, groupId: tabToCreate.groupId });
-                      resolve();
+                      resolve({
+                        tabId: newTab.id,
+                        groupId: tabToCreate.groupId,
+                        groupTitle: tabToCreate.originalGroupTitle,
+                        groupColor: tabToCreate.originalGroupColor
+                      });
                     }
                   });
                 })
@@ -640,52 +656,50 @@ function openWindow(windowId) {
             }
 
             Promise.all(tabCreationPromises)
-              .then(() => {
-                var tabsByGroup = {};
-
-                // Collect tab IDs by groupId
-                createdTabIds.forEach(createdTab => {
-                  var groupId = createdTab.groupId;
-                  if (groupId !== null) {
-                    if (!tabsByGroup[groupId]) {
-                      tabsByGroup[groupId] = [];
+              .then(createdTabs => {
+                // Group tabs by their original group IDs
+                const tabsByOriginalGroup = new Map();
+                
+                createdTabs.forEach(tab => {
+                  if (tab.groupId) {
+                    if (!tabsByOriginalGroup.has(tab.groupId)) {
+                      tabsByOriginalGroup.set(tab.groupId, {
+                        tabIds: [],
+                        title: tab.groupTitle,
+                        color: tab.groupColor
+                      });
                     }
-                    tabsByGroup[groupId].push(createdTab.tabId);
+                    tabsByOriginalGroup.get(tab.groupId).tabIds.push(tab.tabId);
                   }
                 });
 
-                // Group tabs as needed
-                var groupPromises = [];
-                for (var groupId in tabsByGroup) {
-                  if (tabsByGroup.hasOwnProperty(groupId)) {
-                    var groupTabIds = tabsByGroup[groupId];
+                // Create each group separately
+                const groupCreationPromises = Array.from(tabsByOriginalGroup.entries()).map(([_, groupInfo]) => {
+                  return new Promise((resolve, reject) => {
+                    chrome.tabs.group({
+                      tabIds: groupInfo.tabIds,
+                      createProperties: { windowId: newWindowId }
+                    }, (newGroupId) => {
+                      if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError.message);
+                      } else {
+                        // Update group properties
+                        chrome.tabGroups.update(newGroupId, {
+                          title: groupInfo.title,
+                          color: groupInfo.color
+                        }, () => resolve());
+                      }
+                    });
+                  });
+                });
 
-                    if (groupTabIds.length > 0) {
-                      groupPromises.push(
-                        new Promise((resolve, reject) => {
-                          chrome.tabs.group({ tabIds: groupTabIds, createProperties: { windowId: newWindowId } }, function(newGroupId) {
-                            if (chrome.runtime.lastError) {
-                              reject(chrome.runtime.lastError.message);
-                            } else {
-                              var group = windowInfo.groups[groupId];
-                              chrome.tabGroups.update(newGroupId, { title: group.title, color: group.color }, function() {
-                                resolve();
-                              });
-                            }
-                          });
-                        })
-                      );
-                    }
-                  }
-                }
-
-                return Promise.all(groupPromises);
+                return Promise.all(groupCreationPromises);
               })
               .then(() => {
-                console.log("Tabs and groups opened successfully");
+                console.log("Tabs and groups restored successfully");
               })
               .catch(error => {
-                console.error("Error opening tabs and groups:", error);
+                console.error("Error restoring tabs and groups:", error);
               });
           });
         }
