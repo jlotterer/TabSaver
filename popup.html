@@ -3,152 +3,495 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jeff's Tab Manager</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
-
+  <title>Jeff's Tab Saver</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
   <style>
     body {
-      width: 330px;
-      padding: 10px;
-      font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
-      font-size: 80%;
+      width: 400px;
+      margin: 0;
+      font-family: 'Roboto', Arial, sans-serif;
+      overflow: hidden; /* Prevent body scrollbar */
+      height: 600px; /* Set fixed height for popup */
+      display: flex;
+      flex-direction: column;
     }
 
+    /* Header styles */
+    .header {
+      background-color: #1976D2;
+      color: white;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      flex-shrink: 0; /* Prevent header from shrinking */
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .title-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-title {
+      font-size: 20px;  /* "Tab Saver" Font Size */
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Search bar styles */
+    .search-container {
+      background: white;
+      padding: 8px 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      flex-shrink: 0; /* Prevent search from shrinking */
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 8px 8px 40px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: #1976D2;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 8px;
+      color: #757575;
+    }
+
+    
+    /* Action buttons */
+    .icon-button {
+      background: none;
+      border: none;
+      padding: 8px;
+      color: white;
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .icon-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+    }
+
+    /* Tooltip styles */
+    .icon-button .tooltip {
+      visibility: hidden;
+      position: absolute;
+      background-color: rgba(97, 97, 97, 0.9);
+      color: white;
+      text-align: center;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      bottom: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .icon-button:hover .tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* Content area */
+    .content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Tree structure styles */
+    .tree-root {
+        list-style: none;
+        padding-left: 0;
+        margin: 0;
+    }
+
+    .tree-root ul {
+        list-style: none;
+        padding-left: 20px;
+        margin: 0;
+    }
+
+    .tree-header {
+        display: flex;
+        align-items: center;
+        padding: 4px 0;
+        cursor: pointer;
+        min-height: 24px; /* Add this to ensure consistent height */
+    }
+
+    .tree-toggle {
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        user-select: none;
+        color: #666;
+        font-size: 20px !important; /* Override Material Icons default size */
+        vertical-align: middle;
+    }
+
+    .tree-toggle:hover {
+        color: #000;
+        background-color: rgba(0, 0, 0, 0.04);
+        border-radius: 50%;
+    }
+
+    .tree-title {
+        flex-grow: 1;
+        margin-right: 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 2px 4px; /* Add this for better hover effect */
+    }
+
+    .tree-controls {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+        align-items: center; /* Add this for better alignment */
+    }
+
+    .tree-btn {
+        background: none;
+        border: none;
+        padding: 2px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        min-width: 20px; /* Add this for consistent button size */
+        min-height: 20px; /* Add this for consistent button size */
+    }
+
+    /* Add specific size for the icons inside tree buttons */
+    .tree-btn .material-icons {
+        font-size: 16px !important; /* Make default icon match favicon size */
+        color: #757575;  /* More subtle color for default icon */
+    }
+
+    .tree-btn:hover {
+        color: #000;
+        background-color: rgba(0, 0, 0, 0.05); /* Add hover background */
+        border-radius: 3px;
+    }
+
+    .tree-favicon {
+        width: 14px;
+        height: 14px;
+        margin-right: 8px;
+        flex-shrink: 0;
+        object-fit: contain; /* Add this to prevent image distortion */
+        vertical-align: middle;
+    }
+
+    .tree-favicon.material-icons {
+        font-size: 14px !important; /* Match favicon size */
+
+        color: #757575;  /* More subtle color for default icon */
+        width: 14px;
+        height: 14px;
+        margin-right: 8px;
+        flex-shrink: 0;
+        object-fit: contain; /* Add this to prevent image distortion */
+        vertical-align: middle;
+    }
+
+    .tree-tab-content {
+        display: flex;
+        align-items: center;
+        padding: 4px 8px;
+        min-height: 24px; /* Add this for consistent height */
+    }
+
+    .tree-tab-content a {
+        flex-grow: 1;
+        text-decoration: none;
+        color: #000;
+        margin-right: 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 2px 4px; /* Add this for better hover effect */
+    }
+
+    .tree-tab-content a:hover {
+        text-decoration: underline;
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 3px;
+    }
+
+    .tree-window > .tree-header {
+        font-weight: bold;
+    }
+
+    .tree-group > .tree-header {
+        color: #666;
+    }
+
+    .tree-content {
+        display: block;
+        transition: all 0.2s ease; /* Add smooth transition for expand/collapse */
+    }
+
+    .tree-title-input {
+        font-size: inherit;
+        font-family: inherit;
+        font-weight: inherit;
+        border: 1px solid #3377ff;
+        border-radius: 3px;
+        padding: 2px 4px;
+        margin: -3px 0;
+        width: calc(100% - 20px);
+        outline: none;
+        background: white; /* Add this to ensure input is visible */
+    }
+
+    .tree-title {
+        cursor: text;
+    }
+
+    .tree-title:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 3px;
+    }
+
+    /* Title edit icon */
+    .tree-title:hover .edit-icon {
+        opacity: 0.5 !important;
+    }
+
+    .edit-icon:hover {
+        opacity: 1 !important;
+    }
+
+    /* Add these new styles for better visual hierarchy */
+    .tree-window {
+        margin-bottom: 4px;
+    }
+
+    .tree-group {
+        margin-left: 12px;
+    }
+
+    /* Add style for collapsed state */
+    .tree-content.collapsed {
+        display: none;
+    }
+
+
+    /* Update button styles to match Material Design */
     .button {
-      width: 160px;
-      padding: 5px 10px;
-      background-color: #3377ff; /* Blue */
+      background-color: #1976D2;
+      color: white;
       border: none;
       border-radius: 4px;
-      color: white;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 11px;
-      margin: 4px 2px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      text-transform: uppercase;
       cursor: pointer;
+      transition: background-color 0.2s;
     }
 
-
-    .btn {
-      width: 140px;
-      padding: 5px 10px;
-      background-color: #3377ff; /* Blue */
-      border: none;
-      border-radius: 4px;
-      color: white;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 11px;
-      margin: 4px 2px;
-      cursor: pointer;
+    .button:hover {
+      background-color: #1565C0;
     }
 
     #status {
-      margin-top: 10px;
+      padding: 16px 16px 0 16px;
+      color: #757575;
+      font-size: 14px;
+      flex-shrink: 0;
     }
 
-    .window {
-      margin-top: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      padding: 10px;
-      font-size: 11px;
-    }
-    .window h2 {
-      margin-top: 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .window ul {
-      list-style-type: none;
-      padding-left: 0;
-    }
-    .window ul li {
-      margin-bottom: 5px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .group {
-      margin-top: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 5px;
-      background-color: #f9f9f9;
-    }
-    .deleteBtn {
-      background-color: #cc3300; /* Red */
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      padding: 5px;
-      font-size: 10px;
-    }
-    .openBtn {
-      background-color: #3377ff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      padding: 5px;
-      margin-left: 10px;
-      font-size: 10px;
+    #windowsList {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      padding-top: 0;
     }
 
-    input[type="file"] {
+    /* Menu dropdown styles */
+    .menu-dropdown {
+      position: absolute;
+      top: 100%; /* Changed from fixed 48px */
+      right: 8px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       display: none;
+      z-index: 1000;
+      min-width: 200px;
+      padding: 8px 0;
     }
 
-    .action_btn {
-      width: 320px;
-      margin: 0 auto;
-      display: inline;
+    .menu-dropdown.show {
+        display: block;
     }
-    .button-container {
+
+    .menu-item {
       display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 8px 16px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .menu-item:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    .menu-item i {
+     font-size: 20px;
+    }
+
+
+
+
+    .menu-item:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    .menu-item .material-icons {
+        margin-right: 12px;
+        font-size: 20px;
+        color: rgba(0, 0, 0, 0.54);
+    }
+
+    .menu-item.warning {
+        color: #d32f2f;
+    }
+
+    .menu-item.warning .material-icons {
+        color: #d32f2f;
+    }
+
+    .menu-separator {
+        height: 1px;
+        background-color: rgba(0, 0, 0, 0.12);
+        margin: 8px 0;
+    }
+
+    /* Update header position for dropdown */
+    .header {
+        position: relative;
     }
 
 
   </style>
-
-
-</head>
 <body>
-  <h3>Tab Manager</h3>
+  <header class="header">
+    <div class="header-content">
+      <div class="title-section">
+        <span class="material-icons">tab</span>
+        <h1 class="header-title">Tab Saver</h1>
+      </div>
+      <div class="header-actions">
+        <button class="icon-button" id="saveTabs">
+          <span class="material-icons">save</span>
+          <span class="tooltip">Save All Tabs</span>
+        </button>
+        <button class="icon-button" id="toggleAllTabs">
+          <span class="material-icons" id="toggleIcon">unfold_less</span>
+          <span class="tooltip">Toggle Collapse</span>
+        </button>
+        <button class="icon-button" id="menuButton">
+          <span class="material-icons">more_vert</span>
+          <span class="tooltip">Menu</span>
+        </button>
+        <div id="menuDropdown" class="menu-dropdown">
+          <button class="menu-item" id="exportTabs">
+            <span class="material-icons">download</span>
+            <span>Export Tabs</span>
+          </button>
+          <button class="menu-item" id="importTabs">
+            <span class="material-icons">upload</span>
+            <span>Import Tabs</span>
+          </button>
+          <div class="menu-separator"></div>
+          <button class="menu-item" id="reloadTabsInActiveWindow">
+            <span class="material-icons">refresh</span>
+            <span>Reload Active Window</span>
+          </button>
+          <button class="menu-item" id="reloadAllTabs">
+            <span class="material-icons">rotate_right</span>
+            <span>Reload All Windows</span>
+          </button>
 
-<div class="button-container">
-  <button id="saveTabs" class="button">Save Tabs</button>
-</div>
+          <div class="menu-separator"></div>
+          <button class="menu-item warning" id="deleteAllTabs">
+            <span class="material-icons">delete</span>
+            <span>Delete All Tabs</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
 
-<div class="button-container">
-  <button id="openTabs" class="button">Open All Tabs</button>
-  <button id="deleteAllTabs" class="button">Delete All Tabs</button>
-</div>
+  <input type="file" id="importTabsInput" accept=".json" style="display: none;"/>
 
-<div class="button-container">
-  <button id="exportTabs" class="button">Export All Tabs</button> <!-- Export button -->
-  <input id="importTabs" type="file" accept=".json"/>  
-  <label for="importTabs" class="btn">Import Tabs</label>
-</div>
+  <div class="search-container">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input type="text" class="search-input" placeholder="Search tabs..." id="searchTabs">
+    </div>
+  </div>
 
-<div class="button-container">
-  <button id="reloadTabsInActiveWindow" class="button">Reload Active Window</button>
-  <button id="reloadAllTabs" class="button">Reload All Windows</button>
-</div>
+  <div class="content">
+    <div id="status"></div>
+    <div id="windowsList"></div>
+  </div>
 
-  <!-- <input type="file" id="importTabs" accept=".json"> 
-  <!-- <button id="importTabs">Import Tabs</button> <!-- Button for importing tabs -->
-
-  <div id="status"></div>
-  <div id="windowsList"></div>
   <script src="popup.js"></script>
-
 </body>
 </html>

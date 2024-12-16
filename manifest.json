@@ -1,12 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "Tab Manager",
+  "name": "Jeff's Tab Saver",
   "version": "1.0",
-  "description": "Saves all open tabs for all open windows, and does some other stuff too",
+  "description": "Saves all open tabs for all open windows",
   "permissions": [
     "tabs",
     "tabGroups",
-    "storage"
+    "storage",
+    "favicon"
+  ],
+  "host_permissions": [
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
@@ -15,6 +19,7 @@
     "default_popup": "popup.html"
   },
   "icons": {
-    "48": "icons/icon48.png"
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   }
 }
