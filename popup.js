@@ -141,26 +141,36 @@ function truncateText(text, maxLength) {
   return text.substr(0, maxLength - 3) + '...';
 }
 
-function getFaviconUrl(url) {
-  // Try multiple favicon sources
-  const sources = [
-      tab => tab.favIconUrl,
-      tab => `chrome://favicon/${tab.url}`,
-      tab => {
-          try {
-              const urlObj = new URL(tab.url);
-              return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}`;
-          } catch (e) {
-              return null;
-          }
-      }
-  ];
-
-  for (const source of sources) {
-      const faviconUrl = source({ url });
-      if (faviconUrl) return faviconUrl;
+function getSafeFaviconUrl(tab) {
+  // If the tab already has a valid favicon that's not a chrome://favicon URL, use it
+  if (tab.favIconUrl && !tab.favIconUrl.startsWith('chrome://favicon/')) {
+    return tab.favIconUrl;
   }
-  return null;
+  
+  try {
+    const url = new URL(tab.url);
+    const protocol = url.protocol;
+    
+    // Skip favicon generation for browser internal pages
+    if (protocol === 'chrome:' || 
+        protocol === 'edge:' || 
+        protocol === 'moz-extension:' || 
+        protocol === 'chrome-extension:' ||
+        protocol === 'about:' ||
+        protocol === 'data:') {
+      return null; // Will use default icon
+    }
+    
+    // For regular web pages, try Google's favicon service as backup
+    if (protocol === 'http:' || protocol === 'https:') {
+      return tab.favIconUrl || `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=16`;
+    }
+    
+    return null;
+    
+  } catch (e) {
+    return null;
+  }
 }
 
 
@@ -226,9 +236,7 @@ function loadTabs() {
         });
 
 
-        // Modify the window title creation in your loadTabs function
-        // Replace the existing window title creation code with this:
-
+        // Window title creation
         const windowTitle = document.createElement('span');
         windowTitle.className = 'tree-title';
         const titleText = document.createTextNode('');
@@ -236,7 +244,7 @@ function loadTabs() {
         getWindowName(window.windowId, function(name) {
           windowTitle.textContent = name;
 
-          // Add edit icon here
+          // Add edit icon 
           const editIcon = document.createElement('span');
           editIcon.className = 'icon icon-edit edit-icon';
           editIcon.style.fontSize = '30px';
@@ -317,11 +325,9 @@ function loadTabs() {
         });
 
 
-
-        //
-        // DO I NEED THIS DeleteBtn?  Which is this for?
-        // ??
-        // ??
+        // DeleteBtn allows users to delete saved windows from their saved 
+        // tabs list without having to open them first. It's different 
+        // from archiving - this permanently removes the window data.
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'tree-btn';
         deleteBtn.innerHTML = '<span class="icon icon-delete"></span>';
@@ -371,9 +377,22 @@ function loadTabs() {
               favicon.className = 'tree-favicon';
               favicon.onerror = function() {
                 console.log('Favicon failed to load:', tab.favIconUrl, 'for tab:', tab.title);
-                const defaultIcon = document.createElement('span');
-                defaultIcon.className = 'icon icon-public tree-favicon';
-                favicon.replaceWith(defaultIcon);
+                // Try Google's favicon service as fallback
+                const safeUrl = getSafeFaviconUrl(tab);
+                if (safeUrl && safeUrl !== tab.favIconUrl) {
+                  this.src = safeUrl;
+                  this.onerror = function() {
+                    // Final fallback to default icon
+                    const defaultIcon = document.createElement('span');
+                    defaultIcon.className = 'icon icon-public tree-favicon';
+                    this.replaceWith(defaultIcon);
+                  };
+                } else {
+                  // Use default icon
+                  const defaultIcon = document.createElement('span');
+                  defaultIcon.className = 'icon icon-public tree-favicon';
+                  this.replaceWith(defaultIcon);
+                }
               };
               tabContent.appendChild(favicon);
             } else {
@@ -482,12 +501,29 @@ function loadTabs() {
                   favicon.src = tab.favIconUrl;
                   favicon.className = 'tree-favicon';
                   favicon.onerror = function() {
-                      console.log('Favicon failed to load:', tab.favIconUrl, 'for tab:', tab.title);
+                    console.log('Favicon failed to load:', tab.favIconUrl, 'for tab:', tab.title);
+                    // Try Google's favicon service as fallback
+                    const safeUrl = getSafeFaviconUrl(tab);
+                    if (safeUrl && safeUrl !== tab.favIconUrl) {
+                      this.src = safeUrl;
+                      this.onerror = function() {
+                        // Final fallback to default icon
+                        const defaultIcon = document.createElement('span');
+                        defaultIcon.className = 'icon icon-public tree-favicon';
+                        this.replaceWith(defaultIcon);
+                      };
+                    } else {
+                      // Use default icon
                       const defaultIcon = document.createElement('span');
                       defaultIcon.className = 'icon icon-public tree-favicon';
-                      favicon.replaceWith(defaultIcon);
+                      this.replaceWith(defaultIcon);
+                    }
                   };
                   tabContent.appendChild(favicon);
+                } else {
+                  const defaultIcon = document.createElement('span');
+                  defaultIcon.className = 'icon icon-public tree-favicon';
+                  tabContent.appendChild(defaultIcon);
                 }
 
                 const tabLink = document.createElement('a');
@@ -944,7 +980,7 @@ function createTabListItem(tab, windowId, groupId, tabIndex) {
   tabContent.className = 'tree-tab-content';
 
   // Try to get favicon URL
-  const faviconUrl = getFaviconUrl(tab);
+  const faviconUrl = getSafeFaviconUrl(tab);
   console.log('Favicon URL for tab:', tab.title, 'is:', faviconUrl);
   
   // Add favicon

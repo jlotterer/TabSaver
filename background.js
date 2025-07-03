@@ -1,5 +1,7 @@
 // Global variables
 let autoSaveTimer = null;
+let windowTracker = new Map(); // windowId -> { tabs, groups, lastSaved }
+
 
 // Helper functions
 function getIntervalInMs(interval, unit) {
@@ -27,7 +29,6 @@ function setupAutoSave(enabled, interval, unit) {
  }
 }
 
-// Replace the existing saveAllTabs function in background.js with this updated version
 
 async function saveAllTabs() {
     const settings = await chrome.storage.sync.get({
@@ -62,7 +63,7 @@ async function saveAllTabs() {
                 const tabData = {
                   url: tab.url,
                   title: tab.title,
-                  favIconUrl: tab.favIconUrl || `chrome://favicon/${tab.url}`,
+                  favIconUrl: getSafeFaviconUrl(tab),
                   discarded: tab.discarded || false
                 };
   
@@ -117,7 +118,40 @@ async function saveAllTabs() {
     updateWindowTracker();
 }
 
-
+// NEW CODE (with proper protocol checking):
+function getSafeFaviconUrl(tab) {
+  // If the tab already has a valid favicon, use it
+  if (tab.favIconUrl && !tab.favIconUrl.startsWith('chrome://favicon/')) {
+    return tab.favIconUrl;
+  }
+  
+  try {
+    const url = new URL(tab.url);
+    const protocol = url.protocol;
+    
+    // Skip favicon generation for browser internal pages
+    if (protocol === 'chrome:' || 
+        protocol === 'edge:' || 
+        protocol === 'moz-extension:' || 
+        protocol === 'chrome-extension:' ||
+        protocol === 'about:' ||
+        protocol === 'data:') {
+      return null; // Will fallback to default icon in UI
+    }
+    
+    // For regular web pages, use chrome://favicon
+    if (protocol === 'http:' || protocol === 'https:') {
+      return `chrome://favicon/${tab.url}`;
+    }
+    
+    // For anything else, don't generate a favicon URL
+    return null;
+    
+  } catch (e) {
+    // If URL parsing fails, don't generate a favicon
+    return null;
+  }
+}
 
 // Event Listeners
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -183,9 +217,9 @@ chrome.storage.sync.get({
 
 // Auto Archive on Close
 
-// Global variable to track window data
-let windowTracker = new Map(); // windowId -> { tabs, groups, lastSaved }
 
+
+// Function to update window tracker when tabs are saved
 // Function to update window tracker when tabs are saved
 function updateWindowTracker() {
   chrome.windows.getAll({ populate: true }, function(windows) {
@@ -212,7 +246,7 @@ function updateWindowTracker() {
           const tabData = {
             url: tab.url,
             title: tab.title,
-            favIconUrl: tab.favIconUrl || `chrome://favicon/${tab.url}`,
+            favIconUrl: getSafeFaviconUrl(tab),
             discarded: tab.discarded || false
           };
 
@@ -328,8 +362,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-// Update the existing saveAllTabs function to also update the tracker
-// updateWindowTracker();
 
 // Initialize tracker on startup
 chrome.runtime.onStartup.addListener(() => {
