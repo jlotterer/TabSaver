@@ -3,34 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jeff's Tab Saver</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+  <title>Tab Saver</title>
+  
   <style>
+    /* Base Styles */
     body {
       width: 400px;
+      height: 600px;
       margin: 0;
       font-family: 'Roboto', Arial, sans-serif;
-      overflow: hidden; /* Prevent body scrollbar */
-      height: 600px; /* Set fixed height for popup */
+      overflow: hidden;
       display: flex;
       flex-direction: column;
     }
 
-    /* Header styles */
+    /* Icon Styles */
+    .icon {
+      width: 22px;
+      height: 22px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      display: inline-block;
+    }
+
+    /* Icon Definitions - 22px */
+    .icon-tab { background-image: url('icons/tab.svg'); }
+    .icon-save { background-image: url('icons/save.svg'); }
+    .icon-unfold { background-image: url('icons/unfold_less.svg'); }
+    .icon-unfold-more { background-image: url('icons/unfold_more.svg'); }
+    .icon-unfold-less { background-image: url('icons/unfold_less.svg'); }
+    .icon-menu { background-image: url('icons/more_vert.svg'); }
+    .icon-search { background-image: url('icons/search.svg'); }
+
+    /* Menu Icons - 18px*/
+    .icon-download { background-image: url('icons/file_download.svg'); }
+    .icon-upload { background-image: url('icons/file_upload.svg'); }
+    .icon-refresh { background-image: url('icons/refresh2.svg'); }
+    .icon-rotate { background-image: url('icons/rotate_right.svg'); }
+    .icon-delete { background-image: url('icons/delete.svg'); }
+    .icon-sort { background-image: url('icons/sort_by_alpha.svg'); }
+    .icon-settings { background-image: url('icons/settings.svg'); }
+
+    /* Tree Icons */
+    .icon-expand { background-image: url('icons/expand_more.svg'); }
+    .icon-collapse { background-image: url('icons/navigate_next.svg'); }
+    .icon-open { background-image: url('icons/open_in_new.svg'); }
+    .icon-pause { background-image: url('icons/pause_circle.svg'); }
+    .icon-pause-indicator { background-image: url('icons/pause.svg'); }
+    .icon-close { background-image: url('icons/close.svg'); }
+    .icon-edit { background-image: url('icons/edit.svg'); }
+
+    .icon-inventory2 { background-image: url('icons/inventory2.svg'); }
+    .icon-archive { background-image: url('icons/archive.svg'); }
+    .icon-restore { background-image: url('icons/unarchive.svg'); }
+    .icon-back { background-image: url('icons/arrow_back.svg'); }
+    .icon-folder { background-image: url('icons/folder.svg'); }
+    
+
+
+    /* Favicons */
+    .icon-public { background-image: url('icons/public.svg'); }
+
+
+    /* Header Section */
     .header {
       background-color: #1976D2;
       color: white;
-      padding: 16px;
+      padding: 14px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      flex-shrink: 0; /* Prevent header from shrinking */
+      flex-shrink: 0;
+      position: relative;
     }
 
     .header-content {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .title-section {
@@ -40,7 +90,7 @@
     }
 
     .header-title {
-      font-size: 20px;  /* "Tab Saver" Font Size */
+      font-size: 18px;
       font-weight: 500;
       margin: 0;
     }
@@ -50,12 +100,67 @@
       gap: 8px;
     }
 
-    /* Search bar styles */
+    /* archive section */
+    .archive-section-header {
+      font-size: 16px;
+      font-weight: 500;
+      margin: 16px 0 8px;
+      padding: 0 8px;
+      color: #666;
+    }
+
+    .archive-name {
+      cursor: text;
+    }
+
+    .archive-date {
+      color: #666;
+      cursor: default;
+    }
+
+    .archive-name {
+      cursor: text;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1; /* This allows it to take up available space but shrink if needed */
+    }
+
+    .archive-date {
+      color: #666;
+      cursor: default;
+      white-space: nowrap;
+      margin-left: 8px; /* Add some space between name and date */
+      flex-shrink: 0; /* Prevent date from shrinking */
+    }
+
+    .tree-title {
+      flex-grow: 1;
+      margin-right: 8px;
+      padding: 2px 4px;
+      cursor: text;
+      line-height: normal;
+      display: flex;
+      align-items: center;
+      min-width: 0; /* Important for text overflow to work */
+    }
+
+    /* Add clearfix to handle floated elements */
+    .tree-title::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+
+
+
+    /* Search Bar */
     .search-container {
       background: white;
       padding: 8px 16px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      flex-shrink: 0; /* Prevent search from shrinking */
+      flex-shrink: 0;
       position: sticky;
       top: 0;
       z-index: 1;
@@ -87,13 +192,12 @@
       color: #757575;
     }
 
-    
-    /* Action buttons */
+    /* Button Styles */
     .icon-button {
       background: none;
       border: none;
       padding: 8px;
-      color: white;
+      color: rgb(178, 23, 23);
       cursor: pointer;
       border-radius: 50%;
       display: flex;
@@ -104,10 +208,9 @@
 
     .icon-button:hover {
       background-color: rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
     }
 
-    /* Tooltip styles */
+    /* Tooltip Styles */
     .icon-button .tooltip {
       visibility: hidden;
       position: absolute;
@@ -121,7 +224,7 @@
       bottom: -30px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 1;
+      z-index: 1000;
       opacity: 0;
       transition: opacity 0.3s;
     }
@@ -131,236 +234,238 @@
       opacity: 1;
     }
 
-    /* Content area */
-    .content {
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Tree structure styles */
+    /* Tree View Structure */
     .tree-root {
-        list-style: none;
-        padding-left: 0;
-        margin: 0;
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
     }
 
     .tree-root ul {
-        list-style: none;
-        padding-left: 20px;
-        margin: 0;
+      list-style: none;
+      padding-left: 12px;
+      margin: 0;
     }
 
-    .tree-header {
-        display: flex;
-        align-items: center;
-        padding: 4px 0;
-        cursor: pointer;
-        min-height: 24px; /* Add this to ensure consistent height */
-    }
-
-    .tree-toggle {
-        width: 20px;
-        height: 20px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        user-select: none;
-        color: #666;
-        font-size: 20px !important; /* Override Material Icons default size */
-        vertical-align: middle;
-    }
-
-    .tree-toggle:hover {
-        color: #000;
-        background-color: rgba(0, 0, 0, 0.04);
-        border-radius: 50%;
-    }
-
-    .tree-title {
-        flex-grow: 1;
-        margin-right: 8px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding: 2px 4px; /* Add this for better hover effect */
-    }
-
-    .tree-controls {
-        display: flex;
-        gap: 4px;
-        flex-shrink: 0;
-        align-items: center; /* Add this for better alignment */
-    }
-
-    .tree-btn {
-        background: none;
-        border: none;
-        padding: 2px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #666;
-        min-width: 20px; /* Add this for consistent button size */
-        min-height: 20px; /* Add this for consistent button size */
-    }
-
-    /* Add specific size for the icons inside tree buttons */
-    .tree-btn .material-icons {
-        font-size: 16px !important; /* Make default icon match favicon size */
-        color: #757575;  /* More subtle color for default icon */
-    }
-
-    .tree-btn:hover {
-        color: #000;
-        background-color: rgba(0, 0, 0, 0.05); /* Add hover background */
-        border-radius: 3px;
-    }
-
-    .tree-favicon {
-        width: 14px;
-        height: 14px;
-        margin-right: 8px;
-        flex-shrink: 0;
-        object-fit: contain; /* Add this to prevent image distortion */
-        vertical-align: middle;
-    }
-
-    .tree-favicon.material-icons {
-        font-size: 14px !important; /* Match favicon size */
-
-        color: #757575;  /* More subtle color for default icon */
-        width: 14px;
-        height: 14px;
-        margin-right: 8px;
-        flex-shrink: 0;
-        object-fit: contain; /* Add this to prevent image distortion */
-        vertical-align: middle;
-    }
-
-    .tree-tab-content {
-        display: flex;
-        align-items: center;
-        padding: 4px 8px;
-        min-height: 24px; /* Add this for consistent height */
-    }
-
-    .tree-tab-content a {
-        flex-grow: 1;
-        text-decoration: none;
-        color: #000;
-        margin-right: 8px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding: 2px 4px; /* Add this for better hover effect */
-    }
-
-    .tree-tab-content a:hover {
-        text-decoration: underline;
-        background-color: rgba(0, 0, 0, 0.05);
-        border-radius: 3px;
-    }
-
-    .tree-window > .tree-header {
-        font-weight: bold;
-    }
-
-    .tree-group > .tree-header {
-        color: #666;
-    }
-
-    .tree-content {
-        display: block;
-        transition: all 0.2s ease; /* Add smooth transition for expand/collapse */
-    }
-
-    .tree-title-input {
-        font-size: inherit;
-        font-family: inherit;
-        font-weight: inherit;
-        border: 1px solid #3377ff;
-        border-radius: 3px;
-        padding: 2px 4px;
-        margin: -3px 0;
-        width: calc(100% - 20px);
-        outline: none;
-        background: white; /* Add this to ensure input is visible */
-    }
-
-    .tree-title {
-        cursor: text;
-    }
-
-    .tree-title:hover {
-        background-color: rgba(0, 0, 0, 0.05);
-        border-radius: 3px;
-    }
-
-    /* Title edit icon */
-    .tree-title:hover .edit-icon {
-        opacity: 0.5 !important;
-    }
-
-    .edit-icon:hover {
-        opacity: 1 !important;
-    }
-
-    /* Add these new styles for better visual hierarchy */
     .tree-window {
-        margin-bottom: 4px;
+      margin-bottom: 4px;
     }
 
     .tree-group {
-        margin-left: 12px;
+      margin-left: 12px;
     }
 
-    /* Add style for collapsed state */
-    .tree-content.collapsed {
-        display: none;
-    }
-
-
-    /* Update button styles to match Material Design */
-    .button {
-      background-color: #1976D2;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
-      font-size: 14px;
-      font-weight: 500;
-      text-transform: uppercase;
+    .tree-header {
+      display: flex;
+      align-items: center;
+      padding: 4px 0;
       cursor: pointer;
-      transition: background-color 0.2s;
+      min-height: 24px;
     }
 
-    .button:hover {
-      background-color: #1565C0;
+    .tree-window > .tree-header {
+      font-weight: bold;
     }
 
-    #status {
-      padding: 16px 16px 0 16px;
-      color: #757575;
-      font-size: 14px;
+    .tree-group > .tree-header {
+      color: #666;
+    }
+
+    .tree-favicon {
+      width: 14px;
+      height: 14px;
+      margin-right: 8px;
       flex-shrink: 0;
+      object-fit: contain;
+      vertical-align: middle;
     }
 
-    #windowsList {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      padding-top: 0;
+    .icon.icon-public.tree-favicon {
+      width: 1px;
+      height: 1px;
     }
 
-    /* Menu dropdown styles */
+    /* Tree Controls */
+    .tree-toggle {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;  /* Prevents shrinking */
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      color: #666;
+      vertical-align: middle;
+    }
+
+    .tree-toggle:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+      border-radius: 50%;
+    }
+
+    .tree-controls {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+
+    /* Standardize the tree button itself */
+    .tree-btn {
+      background: none;
+      border: none;
+      padding: 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      width: 22px; /* Add fixed width */
+      height: 22px; /* Add fixed height */
+      min-width: 22px; /* Prevent shrinking */
+      min-height: 22px; /* Prevent shrinking */
+    }
+
+    /* Smaller icons for tab controls */
+    .tree-btn .icon {
+      width: 16px;
+      height: 16px;
+      min-width: 16px; /* Add this to prevent shrinking */
+      min-height: 16px; /* Add this to prevent shrinking */
+    }
+
+    .tree-btn:hover {
+      color: #000;
+      background-color: rgba(0, 0, 0, 0.05);
+      border-radius: 3px;
+    }
+
+    /* Tree Content */
+    .tree-content {
+      display: block;
+      transition: all 0.2s ease;
+    }
+
+    .tree-content.collapsed {
+      display: none;
+    }
+
+    .tree-title {
+      flex-grow: 1;
+      margin-right: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 2px 4px;
+      cursor: text;
+      line-height: normal; /* Add this */
+      display: flex; /* Add this */
+      align-items: center; /* Add this */
+    }
+
+    .tree-title:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      border-radius: 3px;
+    }
+
+    .tree-window .tree-btn.archive-btn {
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .tree-window:hover .tree-btn.archive-btn {
+      opacity: 1;
+    }
+
+    .tree-window .archive-btn {
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .tree-window:hover .archive-btn {
+      opacity: 1;
+    }
+
+    /* Tab Content */
+    .tree-tab-content {
+      display: flex;
+      align-items: center;
+      padding: 2px 0px;
+      min-height: 24px;
+      opacity: 1;
+      transition: opacity 0.2s;
+    }
+
+    .tree-tab-content.paused {
+      opacity: 0.5;
+    }
+
+    .tree-tab-content a {
+      flex-grow: 1;
+      text-decoration: none;
+      color: #000;
+      margin-right: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 2px 4px;
+    }
+
+    .tree-tab-content a:hover {
+      text-decoration: underline;
+      background-color: rgba(0, 0, 0, 0.05);
+      border-radius: 3px;
+    }
+
+    /* Favicon styles - made more specific */
+    .tree-tab-content .tree-favicon {
+      width: 12px !important;
+      height: 12px !important;
+      margin-right: 8px;
+      flex-shrink: 0;
+      object-fit: contain;
+      vertical-align: middle;
+    }
+
+    /* Default icon (globe) when favicon fails - made more specific */
+    .tree-tab-content .icon.icon-public.tree-favicon {
+      width: 14px !important;
+      height: 14px !important;
+    }
+
+    /* Edit Title Styles */
+    .tree-title-input {
+      font-size: inherit;
+      font-family: inherit;
+      font-weight: inherit;
+      border: 2px solid #3377ff;
+      border-radius: 4px;
+      padding: 2px 4px;
+      margin: -2px 0;
+      width: calc(100% - 20px);
+      outline: none;
+      background: white;
+    }
+
+    .edit-icon {
+      width: 18px !important;
+      height: 18px !important;
+      opacity: 0;
+    }
+
+    .edit-icon:hover {
+      opacity: 1 !important;
+    }
+
+    .tree-title:hover .edit-icon {
+      opacity: 0.5 !important;
+    }
+
+    /* Menu Dropdown */
     .menu-dropdown {
       position: absolute;
-      top: 100%; /* Changed from fixed 48px */
+      top: 100%;
       right: 8px;
       background: white;
       border-radius: 4px;
@@ -372,7 +477,7 @@
     }
 
     .menu-dropdown.show {
-        display: block;
+      display: block;
     }
 
     .menu-item {
@@ -391,86 +496,131 @@
       background-color: rgba(0, 0, 0, 0.04);
     }
 
-    .menu-item i {
-     font-size: 20px;
-    }
-
-
-
-
-    .menu-item:hover {
-        background-color: rgba(0, 0, 0, 0.04);
-    }
-
-    .menu-item .material-icons {
-        margin-right: 12px;
-        font-size: 20px;
-        color: rgba(0, 0, 0, 0.54);
-    }
-
     .menu-item.warning {
-        color: #d32f2f;
-    }
-
-    .menu-item.warning .material-icons {
-        color: #d32f2f;
+      color: #d32f2f;
     }
 
     .menu-separator {
-        height: 1px;
-        background-color: rgba(0, 0, 0, 0.12);
-        margin: 8px 0;
+      height: 1px;
+      background-color: rgba(0, 0, 0, 0.12);
+      margin: 8px 0;
     }
 
-    /* Update header position for dropdown */
-    .header {
-        position: relative;
+    /* Pause Indicator */
+    .pause-indicator {
+      width: 14px;
+      height: 14px;
+      margin-right: 4px;
+      flex-shrink: 0;
+      transition: opacity 0.2s;
+      opacity: 0;
+    }
+
+    .pause-indicator.active {
+      opacity: 1;
+    }
+
+    /* Content Layout */
+    .content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #status {
+      padding: 16px 16px 0 16px;
+      color: #757575;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    #windowsList {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      padding-top: 0;
+    }
+
+    /* Google Drive Backup */
+    #authorizeGoogleDrive {
+      margin-top: 8px;
+      padding: 8px 16px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #authorizeGoogleDrive:hover {
+      background-color: #3367d6;
     }
 
 
   </style>
+</head>
 <body>
   <header class="header">
     <div class="header-content">
       <div class="title-section">
-        <span class="material-icons">tab</span>
+        <span class="icon icon-tab"></span>
         <h1 class="header-title">Tab Saver</h1>
       </div>
       <div class="header-actions">
         <button class="icon-button" id="saveTabs">
-          <span class="material-icons">save</span>
+          <span class="icon icon-save"></span>
           <span class="tooltip">Save All Tabs</span>
         </button>
         <button class="icon-button" id="toggleAllTabs">
-          <span class="material-icons" id="toggleIcon">unfold_less</span>
+          <span class="icon icon-unfold-more" id="toggleIcon"></span>
           <span class="tooltip">Toggle Collapse</span>
         </button>
         <button class="icon-button" id="menuButton">
-          <span class="material-icons">more_vert</span>
+          <span class="icon icon-menu"></span>
           <span class="tooltip">Menu</span>
         </button>
         <div id="menuDropdown" class="menu-dropdown">
           <button class="menu-item" id="exportTabs">
-            <span class="material-icons">download</span>
+            <span class="icon icon-download"></span>
             <span>Export Tabs</span>
           </button>
           <button class="menu-item" id="importTabs">
-            <span class="material-icons">upload</span>
+            <span class="icon icon-upload"></span>
             <span>Import Tabs</span>
           </button>
           <div class="menu-separator"></div>
           <button class="menu-item" id="reloadTabsInActiveWindow">
-            <span class="material-icons">refresh</span>
+            <span class="icon icon-refresh"></span>
             <span>Reload Active Window</span>
           </button>
           <button class="menu-item" id="reloadAllTabs">
-            <span class="material-icons">rotate_right</span>
+            <span class="icon icon-rotate"></span>
             <span>Reload All Windows</span>
           </button>
-
+          <div class="menu-separator"></div>
+          <button class="menu-item" id="sortWindows">
+            <span class="icon icon-sort"></span>
+            <span>Sort Windows</span>
+          </button>
+          <div class="menu-separator"></div>
+          <button class="menu-item" id="archiveSession">
+            <span class="icon icon-archive"></span>
+            <span>Archive Current Session</span>
+          </button>
+          <button class="menu-item" id="viewArchives">
+            <span class="icon icon-inventory2"></span>
+            <span>View Archives</span>
+          </button>
+          <div class="menu-separator"></div>
+          <button class="menu-item" id="openSettings">
+            <span class="icon icon-settings"></span>
+            <span>Settings</span>
+          </button>
           <div class="menu-separator"></div>
           <button class="menu-item warning" id="deleteAllTabs">
-            <span class="material-icons">delete</span>
+            <span class="icon icon-delete"></span>
             <span>Delete All Tabs</span>
           </button>
         </div>
@@ -482,7 +632,7 @@
 
   <div class="search-container">
     <div class="search-box">
-      <span class="material-icons search-icon">search</span>
+      <span class="icon icon-search search-icon"></span>
       <input type="text" class="search-input" placeholder="Search tabs..." id="searchTabs">
     </div>
   </div>

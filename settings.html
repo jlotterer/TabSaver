@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tab Saver Settings</title>
+  <style>
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #1976D2;
+      margin-top: 0;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .setting-group {
+      margin-bottom: 24px;
+    }
+
+    .setting-group h2 {
+      color: #333;
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    .setting-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .setting-item:last-child {
+      border-bottom: none;
+    }
+
+    .setting-label {
+      flex-grow: 1;
+    }
+
+    .setting-description {
+      color: #666;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .setting-control {
+      margin-left: 16px;
+    }
+
+    /* Switch styles */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .3s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #1976D2;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    .status {
+      color: #4CAF50;
+      font-size: 14px;
+      margin-top: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .status.show {
+      opacity: 1;
+    }
+
+    .interval-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .interval-input {
+      width: 60px;
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .interval-select {
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      background-color: white;
+    }
+
+
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Tab Saver Settings</h1>
+
+    <div class="setting-group">
+      <h2>General</h2>
+
+      <div class="setting-item">
+        <div class="setting-label">
+          <div>Remember window states</div>
+          <div class="setting-description">Remember expanded/collapsed state of windows</div>
+        </div>
+        <div class="setting-control">
+          <label class="switch">
+            <input type="checkbox" id="rememberState">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h2>Auto-Save</h2>
+
+      <div class="setting-item">
+        <div class="setting-label">
+          <div>Auto-save tabs</div>
+          <div class="setting-description">Automatically save tabs when changes are detected</div>
+        </div>
+        <div class="setting-control">
+          <label class="switch">
+            <input type="checkbox" id="autoSave">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-label">
+          <div>Auto-save interval</div>
+          <div class="setting-description">Automatically save tabs at specified intervals</div>
+        </div>
+        <div class="setting-control interval-control">
+          <input type="number" id="autoSaveInterval" min="1" class="interval-input">
+          <select id="autoSaveUnit" class="interval-select">
+            <option value="minutes">Minutes</option>
+            <option value="hours">Hours</option>
+            <option value="days">Days</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="setting-item">
+        <div class="setting-label">
+          <div>Maximum auto-saved sessions</div>
+          <div class="setting-description">Number of auto-saved sessions to keep (0 for unlimited)</div>
+        </div>
+        <div class="setting-control">
+          <input type="number" 
+                 id="maxAutosaveCount" 
+                 min="0" 
+                 class="interval-input" 
+                 style="width: 80px;">
+        </div>
+      </div>
+      
+    </div>
+
+    <div class="setting-group">
+      <h2>Archive</h2>
+      
+      <div class="setting-item">
+        <div class="setting-label">
+          <div>Auto-archive on window close</div>
+          <div class="setting-description">Automatically archive windows when they are closed</div>
+        </div>
+        <div class="setting-control">
+          <label class="switch">
+            <input type="checkbox" id="autoArchive">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

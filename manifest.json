@@ -1,22 +1,25 @@
 {
   "manifest_version": 3,
-  "name": "Jeff's Tab Saver",
-  "version": "1.0",
-  "description": "Saves all open tabs for all open windows",
+  "name": "Tab Saver",
+  "version": "1.1",
+  "author": "Jeffrey Lotterer",
+  "description": "Save and restore all of your open tabs and tab groups, sort and rename windows, and search for open tabs.",
   "permissions": [
     "tabs",
     "tabGroups",
     "storage",
     "favicon"
   ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  
   "background": {
     "service_worker": "background.js"
   },
   "action": {
     "default_popup": "popup.html"
+  },
+  "options_ui": {
+    "page": "settings.html",
+    "open_in_tab": true
   },
   "icons": {
     "48": "icons/icon48.png",
