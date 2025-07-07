@@ -1,7 +1,7 @@
 // Global variables
 let autoSaveTimer = null;
 let windowTracker = new Map(); // windowId -> { tabs, groups, lastSaved }
-
+let updateTrackerTimeout = null;
 
 // Helper functions
 function getIntervalInMs(interval, unit) {
@@ -220,50 +220,105 @@ chrome.storage.sync.get({
 
 
 // Function to update window tracker when tabs are saved
-// Function to update window tracker when tabs are saved
 function updateWindowTracker() {
-  chrome.windows.getAll({ populate: true }, function(windows) {
-    windows.forEach(function(window) {
-      const windowData = {
-        windowId: window.id,
-        tabs: [],
-        groups: {},
-        lastSaved: Date.now()
-      };
-
-      // Get tab groups for this window
-      chrome.tabGroups.query({ windowId: window.id }, function(groups) {
-        groups.forEach(group => {
-          windowData.groups[group.id] = {
-            title: group.title,
-            color: group.color,
-            tabs: []
-          };
-        });
-
-        // Process tabs
-        window.tabs.forEach(function(tab) {
-          const tabData = {
-            url: tab.url,
-            title: tab.title,
-            favIconUrl: getSafeFaviconUrl(tab),
-            discarded: tab.discarded || false
-          };
-
-          if (tab.groupId > -1) {
-            if (windowData.groups[tab.groupId]) {
-              windowData.groups[tab.groupId].tabs.push(tabData);
-            }
-          } else {
-            windowData.tabs.push(tabData);
+  // Debounce to prevent excessive calls
+  if (updateTrackerTimeout) {
+    clearTimeout(updateTrackerTimeout);
+  }
+  
+  updateTrackerTimeout = setTimeout(() => {
+    try {
+      chrome.windows.getAll({ populate: true }, function(windows) {
+        // Add error checking
+        if (chrome.runtime.lastError) {
+          console.error('Error getting windows:', chrome.runtime.lastError);
+          return;
+        }
+        
+        // Check if windows is defined and is an array
+        if (!windows || !Array.isArray(windows)) {
+          console.log('No windows returned or invalid data:', windows);
+          return;
+        }
+        
+        // If no windows, clear the tracker
+        if (windows.length === 0) {
+          windowTracker.clear();
+          return;
+        }
+        
+        windows.forEach(function(window) {
+          // Safety check for window object
+          if (!window || !window.id) {
+            console.log('Invalid window object:', window);
+            return;
           }
-        });
+          
+          const windowData = {
+            windowId: window.id,
+            tabs: [],
+            groups: {},
+            lastSaved: Date.now()
+          };
 
-        // Store in tracker
-        windowTracker.set(window.id, windowData);
+          // Get tab groups for this window
+          chrome.tabGroups.query({ windowId: window.id }, function(groups) {
+            // Add error checking for tabGroups query
+            if (chrome.runtime.lastError) {
+              console.error('Error getting tab groups:', chrome.runtime.lastError);
+              // Continue without groups
+              groups = [];
+            }
+            
+            // Safety check for groups
+            if (groups && Array.isArray(groups)) {
+              groups.forEach(group => {
+                if (group && group.id) {
+                  windowData.groups[group.id] = {
+                    title: group.title || '',
+                    color: group.color || 'grey',
+                    tabs: []
+                  };
+                }
+              });
+            }
+
+            // Process tabs - add safety check
+            if (window.tabs && Array.isArray(window.tabs)) {
+              window.tabs.forEach(function(tab) {
+                // Safety check for tab object
+                if (!tab || !tab.url) {
+                  return; // Skip invalid tabs
+                }
+                
+                const tabData = {
+                  url: tab.url,
+                  title: tab.title || tab.url,
+                  favIconUrl: getSafeFaviconUrl(tab),
+                  discarded: tab.discarded || false
+                };
+
+                if (tab.groupId && tab.groupId > -1) {
+                  if (windowData.groups[tab.groupId]) {
+                    windowData.groups[tab.groupId].tabs.push(tabData);
+                  }
+                } else {
+                  windowData.tabs.push(tabData);
+                }
+              });
+            }
+
+            // Store in tracker
+            windowTracker.set(window.id, windowData);
+          });
+        });
       });
-    });
-  });
+    } catch (error) {
+      console.error('Error in updateWindowTracker:', error);
+    }
+    
+    updateTrackerTimeout = null;
+  }, 500); // 500ms debounce delay
 }
 
 // Function to archive a window
