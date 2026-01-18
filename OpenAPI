@@ -32,20 +32,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "string",
-                  "description": "O*NET-SOC code"
-                },
-                "title": {
-                  "type": "string",
-                  "description": "Occupation title"
-                }
-              }
-            }
+            "description": "Success"
           }
         }
       }
@@ -67,24 +54,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "task": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "statement": {
-                        "type": "string",
-                        "description": "Task statement"
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Success"
           }
         }
       }
