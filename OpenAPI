@@ -1,0 +1,99 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "O*NET Occupation Data Connector",
+    "description": "Retrieves occupation titles and tasks from O*NET Online API 2.0",
+    "version": "1.0.0"
+  },
+  "host": "services.onetcenter.org",
+  "basePath": "/ws",
+  "schemes": [
+    "https"
+  ],
+  "consumes": [],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/online/occupations/{onetCode}": {
+      "get": {
+        "summary": "Get Occupation Details",
+        "description": "Retrieves occupation title and basic information for a given O*NET-SOC code",
+        "operationId": "GetOccupation",
+        "parameters": [
+          {
+            "name": "onetCode",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "O*NET-SOC code (e.g., 25-1014.00)",
+            "x-ms-summary": "O*NET Code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "O*NET-SOC code"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Occupation title"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/online/occupations/{onetCode}/summary/tasks": {
+      "get": {
+        "summary": "Get Occupation Tasks",
+        "description": "Retrieves task list for a given O*NET-SOC code",
+        "operationId": "GetOccupationTasks",
+        "parameters": [
+          {
+            "name": "onetCode",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "O*NET-SOC code (e.g., 25-1014.00)",
+            "x-ms-summary": "O*NET Code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "task": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "statement": {
+                        "type": "string",
+                        "description": "Task statement"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {},
+  "parameters": {},
+  "responses": {},
+  "securityDefinitions": {},
+  "security": [],
+  "tags": []
+}
